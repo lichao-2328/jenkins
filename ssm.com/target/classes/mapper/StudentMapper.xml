@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dao.StudentMapper">
+<resultMap id="BaseResultMap" type="entity.Student">
+<id column="id" property="id"/>
+<result column="student_no" property="studentNo"/>
+<result column="name" property="name"/>
+<result column="gender" property="gender"/>
+<result column="age" property="age"/>
+<result column="class_id" property="classId"/>
+<result column="phone" property="phone"/>
+<result column="address" property="address"/>
+ <result column="enroll_date" property="enroll_date" />
+ <result property="avatar" column="avatar"/>
+ <result property="fdf" column="fdf"/>
+</resultMap>
+   <select id="selectByCourseId" parameterType="int" >
+        SELECT s.id, s.student_no, s.name, s.gender
+        FROM student s
+        INNER JOIN student_course_schedule scs ON s.id = scs.student_id
+        INNER JOIN course_schedule cs ON scs.course_schedule_id = cs.id
+        WHERE cs.id = #{courseScheduleId}
+    </select>
+<select id="search" resultType="entity.Student">SELECT * FROM student<where>
+      <if test="studentNo != null and studentNo != ''">
+        AND student_no LIKE CONCAT('%', #{studentNo}, '%')
+      </if>
+      <if test="name != null and name != ''">
+        AND name LIKE CONCAT('%', #{name}, '%')
+      </if>
+    </where>
+    ORDER BY id DESC</select>
+<select id="selectById" resultMap="BaseResultMap" parameterType="int"> SELECT * FROM student WHERE id = #{id} </select>
+<select id="selectAll" resultMap="BaseResultMap"> SELECT * FROM student ORDER BY id </select>
+<insert id="insert" parameterType="entity.Student" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO student(
+        student_no, name, gender, age, class_id, phone, address, enroll_date, avatar, fdf
+    ) VALUES(
+        #{studentNo}, #{name}, #{gender}, #{age}, #{classId}, #{phone}, #{address}, #{enroll_date}, #{avatar}, #{fdf}
+    )
+</insert>
+
+<update id="update" parameterType="entity.Student"> UPDATE student SET student_no=#{studentNo}, name=#{name}, gender=#{gender}, age=#{age}, class_id=#{classId}, phone=#{phone}, address=#{address}, enroll_date=#{enroll_date},avatar = #{avatar},
+            fdf = #{fdf} WHERE id=#{id} </update>
+<delete id="deleteById" parameterType="int"> DELETE FROM student WHERE id=#{id} </delete>
+<select id="listPaged" resultMap="BaseResultMap">
+    SELECT * FROM student
+    ORDER BY id ASC
+    LIMIT #{size} OFFSET #{offset}
+</select>
+
+<!-- 分页搜索，ID 升序 -->
+<select id="searchPaged" resultMap="BaseResultMap">
+    SELECT * FROM student
+    WHERE (#{studentNo} IS NULL OR student_no LIKE CONCAT('%', #{studentNo}, '%'))
+      AND (#{name} IS NULL OR name LIKE CONCAT('%', #{name}, '%'))
+    ORDER BY id ASC
+    LIMIT #{size} OFFSET #{offset}
+</select>
+
+<select id="countAll" resultType="int">
+    SELECT COUNT(*) FROM student
+</select>
+
+<select id="countSearch" resultType="int">
+    SELECT COUNT(*) FROM student
+    WHERE (#{studentNo} IS NULL OR student_no LIKE CONCAT('%', #{studentNo}, '%'))
+      AND (#{name} IS NULL OR name LIKE CONCAT('%', #{name}, '%'))
+</select>
+
+</mapper>

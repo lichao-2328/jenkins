@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dao.StudentAttendanceSummaryMapper">
+
+    <!-- 出勤汇总映射 -->
+    <resultMap id="StudentAttendanceSummaryMap" type="entity.StudentAttendanceSummary">
+        <id property="id" column="id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="totalPeriods" column="total_periods"/>
+        <result property="attended" column="attended"/>
+        <result property="attendanceRate" column="attendance_rate"/>
+        <result property="lastUpdate" column="last_update"/>
+    </resultMap>  
+
+    <!-- 查询所有学生出勤汇总 -->
+ <select id="selectAllSummary" resultMap="StudentAttendanceSummaryMap" parameterType="java.lang.Integer">
+  SELECT 
+      s.id AS id,
+      COALESCE(sa.total_periods, 0) AS total_periods,
+      COALESCE(sa.attended, 0) AS attended,
+      COALESCE(sa.attendance_rate, 0) AS attendance_rate,
+      sa.last_update
+  FROM student s
+  LEFT JOIN student_attendance_summary sa ON s.id = sa.student_id
+  WHERE s.id = #{studentId}
+  LIMIT 1
+</select>
+
+<!-- 每日/手动更新学期总出勤汇总 -->
+<update id="updateDailySummary">
+ INSERT INTO student_attendance_summary
+    (student_id, total_periods, attended, attendance_rate, last_update)
+SELECT
+    s.id AS student_id,
+
+     -- 总课时数：固定为课程表中所有课程的课时总和（即 320）
+    (SELECT SUM(course_number) FROM course_schedule) AS total_periods,
+
+    -- 实际出勤：统计该学生“出勤(PRESENT)”的唯一节次次数（日期+节次去重）
+    COALESCE((
+        SELECT COUNT(*) 
+        FROM (
+            SELECT DISTINCT a3.attendance_date, a3.period
+            FROM attendance_record a3
+            WHERE a3.student_id = s.id
+              AND a3.status = 'PRESENT'
+        ) t
+    ), 0) AS attended,
+
+    -- 出勤率：避免除零，按上面两个值计算
+    CASE
+        WHEN COALESCE((
+            SELECT SUM(cs2.course_number)
+            FROM course_schedule cs2
+            WHERE cs2.id IN (
+                SELECT DISTINCT a2.course_id
+                FROM attendance_record a2
+                WHERE a2.student_id = s.id
+            )
+        ), 0) > 0 THEN
+            ROUND(
+                COALESCE((
+                    SELECT COUNT(*) 
+                    FROM (
+                        SELECT DISTINCT a3.attendance_date, a3.period
+                        FROM attendance_record a3
+                        WHERE a3.student_id = s.id
+                          AND a3.status = 'PRESENT'
+                    ) t
+                ), 0) /
+                COALESCE((
+                    SELECT SUM(cs2.course_number)
+                    FROM course_schedule cs2
+                    WHERE cs2.id IN (
+                        SELECT DISTINCT a2.course_id
+                        FROM attendance_record a2
+                        WHERE a2.student_id = s.id
+                    )
+                ), 0) * 100,
+                2
+            )
+        ELSE 0
+    END AS attendance_rate,
+
+    NOW() AS last_update
+FROM student s
+-- 注意：不在主查询里联接 attendance_record / course_schedule，避免重复行导致的膨胀
+GROUP BY s.id
+ON DUPLICATE KEY UPDATE
+    total_periods = VALUES(total_periods),
+    attended = VALUES(attended),
+    attendance_rate = VALUES(attendance_rate),
+    last_update = NOW();
+
+</update>
+
+
+
+
+
+    <!-- 查询当天已更新的汇总 -->
+    <select id="selectUpdatedDailySummary" resultMap="StudentAttendanceSummaryMap">
+        SELECT *
+        FROM student_attendance_summary
+        WHERE DATE(last_update) = CURDATE()
+    </select>
+
+    <!-- 凌晨清空昨日出勤记录 -->
+    <update id="resetDailyAttendance">
+        UPDATE attendance_record
+        SET status = NULL
+        WHERE attendance_date = DATE_SUB(CURDATE(), INTERVAL 1 DAY);
+    </update>
+
+</mapper>

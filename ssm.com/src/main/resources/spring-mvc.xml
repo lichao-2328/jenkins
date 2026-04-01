@@ -1,0 +1,52 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+         http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+  <!-- 只扫 controller -->
+  <context:component-scan base-package="controller"/>
+
+  <mvc:annotation-driven/>
+  
+<mvc:resources mapping="/static/**" location="/static/"/>
+  <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    <property name="prefix" value="/WEB-INF/views/"/>
+    <property name="suffix" value=".jsp"/>
+  </bean>
+  <mvc:resources mapping="/uploads/**" location="file:C:/java/avatars/"/>
+  
+
+<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+    <!-- 设置最大上传大小 -->
+    <property name="maxUploadSize" value="5242880"/> <!-- 5MB -->
+    <!-- 设置临时目录（确保存在） -->
+    <property name="uploadTempDir" value="file:/C:/java/avatars"/>
+</bean>
+<bean id="kaptchaProducer" class="com.google.code.kaptcha.impl.DefaultKaptcha">
+    <property name="config">
+        <bean class="com.google.code.kaptcha.util.Config">
+            <constructor-arg>
+                <props>
+                    <prop key="kaptcha.border">yes</prop>
+                    <prop key="kaptcha.textproducer.font.color">black</prop>
+                    <prop key="kaptcha.image.width">150</prop>
+                    <prop key="kaptcha.image.height">50</prop>
+                    <prop key="kaptcha.textproducer.font.size">40</prop>
+                    <prop key="kaptcha.textproducer.char.length">5</prop>
+                    <prop key="kaptcha.textproducer.char.string">abcde2345678gfynmnpwx</prop>
+                    <prop key="kaptcha.background.clear.from">192,192,192</prop>
+                    <prop key="kaptcha.background.clear.to">255,255,255</prop>
+                    <prop key="kaptcha.noise.color">black</prop>
+                    <prop key="kaptcha.obscurificator.impl">com.google.code.kaptcha.impl.WaterRipple</prop>
+                </props>
+            </constructor-arg>
+        </bean>
+    </property>
+</bean>
+
+
+</beans>

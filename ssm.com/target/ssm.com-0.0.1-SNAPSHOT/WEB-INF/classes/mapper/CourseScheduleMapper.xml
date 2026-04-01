@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dao.CourseScheduleMapper">
+
+    <resultMap id="CourseScheduleMap" type="entity.CourseSchedule">
+        <id property="id" column="id"/>
+        <result property="courseName" column="course_name"/>
+        <result property="courseNumber" column="course_number"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="orderNum" column="order_num"/>
+        <result property="termId" column="term_id"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="CourseScheduleMap">
+        SELECT * FROM course_schedule ORDER BY order_num
+    </select>
+
+    <select id="selectById" parameterType="int" resultMap="CourseScheduleMap">
+        SELECT * FROM course_schedule WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="entity.CourseSchedule" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO course_schedule(course_name,course_number, start_time, end_time, order_num,term_id)
+        VALUES (#{courseName},#{courseNumber}, #{startTime}, #{endTime}, #{orderNum},#{termId})
+    </insert>
+
+    <update id="update" parameterType="entity.CourseSchedule">
+        UPDATE course_schedule
+        SET course_name = #{courseName},
+            course_number = #{courseNumber},
+            start_time = #{startTime},
+            end_time = #{endTime},
+            order_num = #{orderNum},
+            term_id= #{termId}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM course_schedule WHERE id = #{id}
+    </delete>
+
+</mapper>

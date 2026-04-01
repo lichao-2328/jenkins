@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/tx
+           http://www.springframework.org/schema/tx/spring-tx.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context.xsd">
+         
+  <!-- 只扫 service（） -->
+  <context:component-scan base-package="service"/>
+  <context:component-scan base-package="config" />
+
+ <!-- 数据源 -->
+<bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource">
+    <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+    <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/school_db?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=Asia/Tokyo"/>
+    <property name="username" value="root"/>
+    <property name="password" value="2328462"/>
+  
+      <!-- HikariCP 特有配置 -->
+    <property name="maximumPoolSize" value="10"/>   <!-- 最大连接数 -->
+    <property name="minimumIdle" value="2"/>       <!-- 最少空闲连接 -->
+    <property name="idleTimeout" value="600000"/>  <!-- 空闲超时，毫秒 -->
+    <property name="maxLifetime" value="1800000"/> <!-- 连接最大存活时间，毫秒 -->
+</bean>
+ 
+  
+
+  <!-- MyBatis -->
+  <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+    <property name="dataSource" ref="dataSource"/>
+    <property name="mapperLocations" value="classpath*:mapper/*.xml"/>
+    <!-- 可选：为简化，指定别名包 -->
+    <property name="typeAliasesPackage" value="entity"/>
+    
+  </bean>
+
+  <!-- 扫描 Mapper 接口 -->
+  <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+    <property name="basePackage" value="dao"/>
+    <!-- 如果你在接口上加了 @Mapper 注解，可以不配这行 -->
+    <!-- <property name="annotationClass" value="org.apache.ibatis.annotations.Mapper"/> -->
+  </bean>
+
+  <!-- 事务（可选但建议） -->
+  
+  <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource"/>
+  </bean>
+   <!-- 开启事务注解 -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+ <!-- Jedis 连接工厂 -->
+<bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+    <property name="hostName" value="127.0.0.1"/>
+    <property name="port" value="6379"/>
+</bean>
+
+<!-- RedisTemplate -->
+<bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+    <property name="connectionFactory" ref="jedisConnectionFactory"/>
+    <property name="keySerializer">
+        <bean class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
+    </property>
+    <property name="valueSerializer">
+        <bean class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
+    </property>
+</bean>
+ 
+<bean id="redisUtil" class="Util.RedisUtil">
+        <property name="redisTemplate" ref="redisTemplate"/>
+    </bean>
+    <bean id="myAuthenticationProvider" class="controller.login.MyAuthenticationProvider" />
+    
+</beans>
