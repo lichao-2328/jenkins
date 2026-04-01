@@ -25,7 +25,7 @@ pipeline {
         echo '保存 war 包...'
         archiveArtifacts artifacts: 'ssm.com/target/*.war'
     }
-}
+}}
     
     post {
         success {
