@@ -14,11 +14,11 @@ pipeline {
         }
         
         stage('打包构建') {
-            steps {
-                echo '正在打包成 jar 文件...'
-                sh 'mvn clean package -DskipTests'
-            }
-        }
+    steps {
+        echo '正在打包成 jar 文件...'
+        sh 'mvn clean package -DskipTests -f ssm.com/pom.xml'
+    }
+}
         
         stage('归档产物') {
             steps {
