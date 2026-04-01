@@ -24,10 +24,19 @@ pipeline {
                 archiveArtifacts artifacts: 'ssm.com/target/*.war'
             }
         }
+
+        stage('部署到 Tomcat') {
+            steps {
+                echo '正在部署...'
+                sh '''
+                    docker cp ssm.com/target/ssm.com-0.0.1-SNAPSHOT.war tomcat:/usr/local/tomcat/webapps/
+                '''
+            }
+        }
     }
 
     post {
-        success { echo '✅ 构建成功！' }
-        failure { echo '❌ 构建失败！' }
+        success { echo '✅ 部署成功！' }
+        failure { echo '❌ 失败！' }
     }
 }
