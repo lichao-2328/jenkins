@@ -1,30 +1,46 @@
 pipeline {
     agent any
+    
+    tools {
+        maven 'Maven'  // 需要在 Jenkins 里配置 Maven
+    }
+    
     stages {
         stage('拉取代码') {
             steps {
-                echo '正在拉取代码...'
+                echo '正在从 GitHub 拉取代码...'
                 checkout scm
             }
         }
-        stage('构建') {
+        
+        stage('自动测试') {
             steps {
-                echo '正在构建...'
-                // 比如 Node.js 项目：
-                // sh 'npm install'
-                // sh 'npm run build'
+                echo '正在运行单元测试...'
+                sh 'mvn test'
             }
         }
-        stage('测试') {
+        
+        stage('打包构建') {
             steps {
-                echo '正在运行测试...'
-                // sh 'npm test'
+                echo '正在打包成 jar 文件...'
+                sh 'mvn clean package -DskipTests'
             }
         }
-        stage('部署') {
+        
+        stage('归档产物') {
             steps {
-                echo '正在部署...'
+                echo '保存 jar 包...'
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
+        }
+    }
+    
+    post {
+        success {
+            echo '✅ 构建成功！'
+        }
+        failure {
+            echo '❌ 构建失败！请检查代码！'
         }
     }
 }
