@@ -20,13 +20,12 @@ pipeline {
     }
 }
         
-        stage('归档产物') {
-            steps {
-                echo '保存 jar 包...'
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-            }
-        }
+        stage('保存产物') {
+    steps {
+        echo '保存 war 包...'
+        archiveArtifacts artifacts: 'ssm.com/target/*.war'
     }
+}
     
     post {
         success {
