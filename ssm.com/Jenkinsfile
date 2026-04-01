@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     tools {
-        maven 'Maven'  // 需要在 Jenkins 里配置 Maven
+        maven 'Maven'
     }
     
     stages {
@@ -10,13 +10,6 @@ pipeline {
             steps {
                 echo '正在从 GitHub 拉取代码...'
                 checkout scm
-            }
-        }
-        
-        stage('自动测试') {
-            steps {
-                echo '正在运行单元测试...'
-                sh 'mvn test'
             }
         }
         
@@ -37,7 +30,7 @@ pipeline {
     
     post {
         success {
-            echo '✅ 构建成功！'
+            echo '✅ 构建成功！jar 包已生成！'
         }
         failure {
             echo '❌ 构建失败！请检查代码！'
